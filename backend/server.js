@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');  // Import cors
 const authRoutes = require('./routes/userRoutes');
 const fileRoutes = require('./routes/uploadRoutes');
+const excelRoutes = require('./routes/excelRoutes');
+const userRoutes = require('./routes/navRoutes');
 
 
 const app = express();
@@ -19,6 +21,8 @@ app.use(bodyParser.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api', fileRoutes);
+app.use('/api', excelRoutes);
+app.use('/api', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

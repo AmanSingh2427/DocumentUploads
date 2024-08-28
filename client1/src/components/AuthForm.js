@@ -55,6 +55,12 @@ const AuthForm = ({ type }) => {
       const response = await axios.post(`http://localhost:5000/api/auth/${type}`, formData);
       toast.success(`${type === 'signup' ? 'Sign Up' : 'Login'} successful!`);
 
+      // Save token to local storage and log it
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        console.log('Token:', response.data.token);
+      }
+
       // Redirect based on the type of form
       if (type === 'signup') {
         navigate('/login'); // Redirect to login page after signup
@@ -67,7 +73,7 @@ const AuthForm = ({ type }) => {
   };
 
   const handleSwitchAuthMode = () => {
-    navigate(type === 'signup' ? '/login' : '/signup');
+    navigate(type === 'signup' ? '/login' : '/');
   };
 
   return (
