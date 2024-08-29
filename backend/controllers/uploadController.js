@@ -79,7 +79,7 @@ const processFileData = (file, fileType) => {
 
 const uploadFile = async (req, res) => {
   const file = req.file;
-
+  
   if (!file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
@@ -88,18 +88,25 @@ const uploadFile = async (req, res) => {
     const fileType = file.mimetype;
     const fileData = await processFileData(file, fileType);
     
-    // Print the file data to the console
-    console.log('File Data:', fileData);
+    // Get the userId from the request (assuming it's passed in headers or body)
+    // const userId = req.headers['user-id']; // Or use req.body.userId if passed in body
+    const userId=req.body.userId;
+    console.log("user id is ",userId);
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
 
     // Save file metadata and content
     const savedFile = await File.saveFileMetadata(
       file.originalname,
       fileType,
-      file.buffer
+      file.buffer,
+      userId // Pass userId here
     );
 
     // Insert Excel, text, or CSV file data into the database
-    await File.insertExcelData(fileData);
+    await File.insertExcelData(fileData, userId); // Pass userId here
 
     res.status(200).json({ message: 'File uploaded, data saved, and inserted into database successfully', file: savedFile });
   } catch (error) {
@@ -107,6 +114,7 @@ const uploadFile = async (req, res) => {
     res.status(500).json({ message: 'Error processing file', error: error.message });
   }
 };
+
 
 module.exports = {
   uploadFile,

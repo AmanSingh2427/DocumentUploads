@@ -4,7 +4,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import { FaTimes } from 'react-icons/fa'; // Import the cross icon
+import { FaTimes } from 'react-icons/fa';
+import DownloadButton from './DownloadButton'; // Import the DownloadButton component
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -12,8 +13,11 @@ const Home = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Adjust the number of items per page
-  const [isUploadFormVisible, setUploadFormVisible] = useState(false); // State to toggle the upload form
+  const [itemsPerPage] = useState(5);
+  const [isUploadFormVisible, setUploadFormVisible] = useState(false);
+
+  // Retrieve the user ID from local storage
+  const userId = localStorage.getItem('userId');
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -21,25 +25,25 @@ const Home = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-  
+
     if (!file) {
       toast.error('Please select a file to upload');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+    formData.append('userId', userId); // Include userId in the form data
+
     try {
       const response = await axios.post('http://localhost:5000/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(response);
       toast.success('File uploaded and data saved successfully');
-      setUploadFormVisible(false); // Hide the form after upload
-      fetchData();
+      setUploadFormVisible(false);
+      fetchData(); // Refresh the data after successful upload
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error uploading file');
     }
@@ -47,9 +51,9 @@ const Home = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/excel-data');
+      const response = await axios.get(`http://localhost:5000/api/excel-data?userId=${userId}`);
       setExcelData(response.data);
-      setFilteredData(response.data); // Initialize filteredData with the fetched data
+      setFilteredData(response.data);
     } catch (error) {
       toast.error('Error fetching data');
     }
@@ -57,18 +61,16 @@ const Home = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    // Filter the data based on the search term
     const filtered = excelData.filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1); // Reset to the first page after filtering
   }, [searchTerm, excelData]);
 
-  // Calculate the data to display for the current page
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -89,10 +91,24 @@ const Home = () => {
     }
   };
 
-  // Function to toggle the form visibility
   const toggleUploadForm = () => {
     setUploadFormVisible(!isUploadFormVisible);
   };
+
+  // UseEffect to trigger toast notifications when user logs in or signs up successfully
+  useEffect(() => {
+    const userAction = localStorage.getItem('userAction');
+    if (userAction) {
+      setTimeout(() => {
+        if (userAction === 'login') {
+          toast.success('Logged in successfully!');
+        } else if (userAction === 'signup') {
+          toast.success('Signed up successfully!');
+        }
+        localStorage.removeItem('userAction'); // Clear the action after showing the toast
+      }, 3000); // Delay of 1 second before showing the toast
+    }
+  }, []);
 
   return (
     <>
@@ -115,9 +131,9 @@ const Home = () => {
             >
               Upload Document
             </button>
+            <DownloadButton data={filteredData} /> {/* Add the DownloadButton here */}
           </div>
           <div className="flex-1 p-8 bg-gray-100">
-            {/* Displaying Excel Data in a Table */}
             <div className="bg-white p-8 border border-gray-300 shadow-lg rounded-lg">
               <h2 className="text-2xl font-bold mb-4">Excel Data</h2>
               <table className="min-w-full bg-white">
@@ -145,7 +161,6 @@ const Home = () => {
                 </tbody>
               </table>
 
-              {/* Pagination */}
               <div className="flex justify-between items-center mt-4">
                 <button
                   onClick={handlePrevious}
@@ -155,7 +170,9 @@ const Home = () => {
                   Previous
                 </button>
                 <div>
-                  <span className="mx-2">{currentPage} / {totalPages}</span>
+                  <span className="mx-2">
+                    {currentPage} / {totalPages}
+                  </span>
                 </div>
                 <button
                   onClick={handleNext}
@@ -170,7 +187,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Modal for Upload Form */}
       {isUploadFormVisible && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white p-8 border border-gray-300 shadow-lg rounded-lg relative w-96">

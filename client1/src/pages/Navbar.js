@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Navbar = () => {
@@ -15,7 +15,15 @@ const Navbar = () => {
           }
         });
         console.log(response);
-        setUserName(response.data.name); // Set the user's name from the response
+        
+        // Set the user's name from the response
+        setUserName(response.data.name);
+
+        // Store the user ID in localStorage
+        if (response.data.userId) {
+          localStorage.setItem('userId', response.data.userId);
+          console.log('User ID:', response.data.userId);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -26,7 +34,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     // Perform logout logic here, e.g., clearing tokens or user data from local storage
-    localStorage.removeItem('token'); // Example: Remove JWT token from local storage
+    localStorage.removeItem('token'); // Remove JWT token from local storage
+    localStorage.removeItem('userId'); // Remove user ID from local storage
     navigate('/login'); // Redirect to the login page
   };
 

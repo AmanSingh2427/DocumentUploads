@@ -55,18 +55,23 @@ const AuthForm = ({ type }) => {
       const response = await axios.post(`http://localhost:5000/api/auth/${type}`, formData);
       toast.success(`${type === 'signup' ? 'Sign Up' : 'Login'} successful!`);
 
-      // Save token to local storage and log it
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('Token:', response.data.token);
+      // Save token and user ID to localStorage
+      const { token, user } = response.data; // `user` instead of `userId` here
+      if (token && user && user.id) { // Checking if user and user.id exist
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', user.id); // Save user ID
+        console.log('Token:', token);
+        console.log('User ID:', user.id);
       }
 
-      // Redirect based on the type of form
-      if (type === 'signup') {
-        navigate('/login'); // Redirect to login page after signup
-      } else {
-        navigate('/home'); // Redirect to home page after login
-      }
+      // Redirect based on the type of form after a short delay
+      setTimeout(() => {
+        if (type === 'signup') {
+          navigate('/login'); // Redirect to login page after signup
+        } else {
+          navigate('/home'); // Redirect to home page after login
+        }
+      }, 1000); // Delay of 1.5 seconds
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong');
     }

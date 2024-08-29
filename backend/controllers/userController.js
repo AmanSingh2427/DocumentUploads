@@ -36,6 +36,8 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
+
+    // Store the user ID in local storage
     res.status(200).json({ user, token });
   } catch (err) {
     res.status(500).json({ message: 'Error logging in' });
